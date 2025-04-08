@@ -39,6 +39,8 @@ def handle_connection(client_socket: socket.socket):
         if len(prvni_radka)!=3:
             pass    
         metoda = prvni_radka[0]
+        if metoda != "GET":
+            raise Exception
         
         if prvni_radka[1] == "/":
             prvni_radka[1]="/index.html"
@@ -47,7 +49,7 @@ def handle_connection(client_socket: socket.socket):
         print(cesta)
         if "../" in cesta:
             status_code = "403 Forbidden"
-            odpoved = b"Forbidden!"
+            odpoved = b"<h1>Forbidden!</h1>"
             odpovidani(status_code, odpoved,"text/html")
             return 
 
@@ -60,14 +62,14 @@ def handle_connection(client_socket: socket.socket):
                 odpoved = soubor.read()
                 
         except FileNotFoundError:
-            odpoved = b"<h1>File not found</h1>"
+            odpoved = b"<h1>File not found</h1><br><a href=\"index.html\">Hlavni stranka</a>"
             status_code="404 Not Found"
             content_type="text/html"
  
 
     except Exception as e:
         status_code="500 :("
-        odpoved = b"<h1>Musime to opravit :(</h1>"
+        odpoved = b"<h1>Musime to opravit :(</h1><br><img src=\"pics/500.jpg\">"
         content_type="text/html"
         print(f"exception je {e}")
 

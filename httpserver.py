@@ -85,7 +85,7 @@ def handle_connection(client_socket: socket.socket):
 def odpovidani(status_code, odpoved,content_type):
 
     # print(f"Metoda: {metoda}\nCesta: {cesta}\nVerze: {verze}")
-    client_socket.send(f"HTTP/1.1 {status_code}\r\nContent-Type: {content_type}\r\nContent-Length: {len(odpoved)}\r\n\r\n".encode("utf-8"))
+    client_socket.send(f"HTTP/1.1 {status_code}\r\nContent-Type: {content_type}\r\nX-Powered-By: FIKS HTTPSERVER\r\nContent-Length: {len(odpoved)}\r\n\r\n".encode("utf-8"))
 
     client_socket.send(odpoved)
 

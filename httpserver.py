@@ -62,14 +62,17 @@ def handle_connection(client_socket: socket.socket):
                 odpoved = soubor.read()
                 
         except FileNotFoundError:
-            odpoved = b"<h1>File not found</h1><br><a href=\"index.html\">Hlavni stranka</a>"
+            with open("errors/404.html","rb") as soubor:
+                odpoved = soubor.read()
             status_code="404 Not Found"
             content_type="text/html"
  
 
     except Exception as e:
         status_code="500 :("
-        odpoved = b"<h1>Musime to opravit :(</h1><br><img src=\"pics/500.jpg\">"
+        with open("errors/500.html","rb") as soubor:
+            odpoved = soubor.read()
+ 
         content_type="text/html"
         print(f"exception je {e}")
 

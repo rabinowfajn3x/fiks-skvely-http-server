@@ -1,6 +1,10 @@
 #! /usr/bin/env python3
 
 import socket
+import os
+
+koncovky = {".html":"text/html",".css":"text/css",".txt":"text/plain","":"application/octet-stream",".jpg":"image/jpeg",".png":"image/png"}
+
 
 def readline(client_socket: socket.socket) -> str:
     buffer = b""
@@ -18,35 +22,72 @@ def readline(client_socket: socket.socket) -> str:
 
 
 def handle_connection(client_socket: socket.socket):
-    radky=[]
-    while True:
-        request_line = readline(client_socket).strip()
-        if request_line == "":
-            # print("mame vse.")
-            break
-        radky.append(request_line)
-        # print("radka:"+request_line)
-    
+    try:
+        radky=[]
+        while True:
+            request_line = readline(client_socket).strip()
+            if request_line == "":
+                # print("mame vse.")
+                break
+            radky.append(request_line)
+            # print("radka:"+request_line)
+        
+                    
+        status_code = "200 OK"
+        # print(f"Received: {request_line}")
+        prvni_radka = radky[0].split(" ")
+        if len(prvni_radka)!=3:
+            pass    
+        metoda = prvni_radka[0]
+        
+        if prvni_radka[1] == "/":
+            prvni_radka[1]="/index.html"
+        
+        cesta = os.path.join("folder",prvni_radka[1][1:])
+        print(cesta)
+        if "../" in cesta:
+            status_code = "403 Forbidden"
+            odpoved = b"Forbidden!"
+            odpovidani(status_code, odpoved,"text/html")
+            return 
+
+        verze = prvni_radka[2]
+        
+        trash, extension = os.path.splitext(cesta)
+        content_type = koncovky[extension]
+        try:
+            with open(cesta,"rb") as soubor:
+                odpoved = soubor.read()
                 
-    status_code = "500 proste chyba"
-    # print(f"Received: {request_line}")
-    prvni_radka = radky[0].split(" ")
-    if len(prvni_radka)!=3:
-        pass    
-    metoda = prvni_radka[0]
-    cesta = prvni_radka[1]
-    verze = prvni_radka[2]
-    odpoved = f"metoda: {metoda}\ncesta: {cesta}\nverze: {verze}\n" 
-    odpovidani(status_code, odpoved)
+        except FileNotFoundError:
+            odpoved = b"<h1>File not found</h1>"
+            status_code="404 Not Found"
+            content_type="text/html"
+ 
+
+    except Exception as e:
+        status_code="500 :("
+        odpoved = b"<h1>Musime to opravit :(</h1>"
+        content_type="text/html"
+        print(f"exception je {e}")
+
+    odpovidani(status_code,odpoved,content_type)
+
+    # odpoved = f"metoda: {metoda}\ncesta: {cesta}\nverze: {verze}\n" 
 
 
 
-def odpovidani(status_code, odpoved):
+def odpovidani(status_code, odpoved,content_type):
 
-    content_type = "text/plain; charset=UTF-8"
     # print(f"Metoda: {metoda}\nCesta: {cesta}\nVerze: {verze}")
-    client_socket.send(f"HTTP/1.1 {status_code}\r\nContent-Type: {content_type}\r\nContent-Length: {len(odpoved)}\r\n\r\n{odpoved}\r\n".encode("utf-8"))
+    client_socket.send(f"HTTP/1.1 {status_code}\r\nContent-Type: {content_type}\r\nContent-Length: {len(odpoved)}\r\n\r\n".encode("utf-8"))
+
+    client_socket.send(odpoved)
+
+    client_socket.send("\r\n".encode("utf-8"))
+
     client_socket.close()
+
     
 
 # create a socket object
@@ -56,7 +97,7 @@ port = 8000
 
 # bind the socket to a specific address and port
 server.bind((server_ip, port))
-server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
 
 # listen for incoming connections
 server.listen(0)
@@ -70,4 +111,5 @@ try:
         handle_connection(client_socket)
 
 finally: 
+    server.shutdown(socket.SHUT_RDWR)
     server.close()

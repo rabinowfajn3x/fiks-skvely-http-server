@@ -3,7 +3,7 @@
 import socket
 import os
 
-koncovky = {".html":"text/html",".css":"text/css",".txt":"text/plain","":"application/octet-stream",".jpg":"image/jpeg",".png":"image/png"}
+koncovky = {".html":"text/html",".css":"text/css",".txt":"text/plain","":"application/octet-stream",".jpg":"image/jpeg",".png":"image/png",".ico":"image/x-icon"}
 
 
 def readline(client_socket: socket.socket) -> str:
@@ -101,8 +101,8 @@ server_ip = "0.0.0.0"
 port = 8000
 
 # bind the socket to a specific address and port
-server.bind((server_ip, port))
 server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+server.bind((server_ip, port))
 
 # listen for incoming connections
 server.listen(0)
